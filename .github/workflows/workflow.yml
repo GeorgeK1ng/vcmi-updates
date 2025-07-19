@@ -16,7 +16,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y python3
 
       - name: Generate vcmi-update.json
-        run: python3 .github/scripts/generate_update_json.py
+        run: python3 .github/scripts/generate_latest_nightly.py
 
       - name: Commit and push
         uses: EndBug/add-and-commit@v9
