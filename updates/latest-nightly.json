@@ -1,0 +1,11 @@
+{
+  "updateType": "nightly",
+  "version": "VCMI 1.7-dev-a00ec58",
+  "commit": "a00ec58",
+  "buildDate": "2025-04-24T18:30:00",
+  "changeLog": "Latest nightly build from develop branch.",
+  "downloadLinks": {
+    "windows": "https://builds.vcmi.download/branch/beta/Windows/VCMI-branch-beta-a00ec58.exe"
+  },
+  "history": []
+}
