@@ -1,0 +1,34 @@
+{
+  "develop": {
+    "version": "VCMI 1.7-dev-7fcb024",
+    "commit": "7fcb024",
+    "buildDate": "2025-07-18T20:49:00",
+    "changeLog": "Latest nightly build from develop branch.",
+    "windows": {
+      "x64": {
+        "download": "https://builds.vcmi.download/branch/develop/Windows/VCMI-branch-develop-7fcb024.exe"
+      }
+    },
+    "ios": {
+      "ios": {
+        "download": "https://builds.vcmi.download/branch/develop/iOS/VCMI-branch-develop-7fcb024.ipa"
+      }
+    }
+  },
+  "beta": {
+    "version": "VCMI 1.7-dev-a00ec58",
+    "commit": "a00ec58",
+    "buildDate": "2025-04-24T18:30:00",
+    "changeLog": "Latest nightly build from develop branch.",
+    "windows": {
+      "x64": {
+        "download": "https://builds.vcmi.download/branch/beta/Windows/VCMI-branch-beta-a00ec58.exe"
+      }
+    },
+    "ios": {
+      "ios": {
+        "download": "https://builds.vcmi.download/branch/beta/iOS/VCMI-branch-beta-a00ec58.ipa"
+      }
+    }
+  }
+}
