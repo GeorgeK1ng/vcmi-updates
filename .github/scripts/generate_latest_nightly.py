@@ -7,7 +7,7 @@ import os
 # Define channels and systems
 channels = ["develop", "beta"]
 platforms = {
-    "windows": ["x64"],
+    "windows": ["x64", "x86"],
     "macos": ["intel", "arm"],
     "android": ["armeabi-v7a", "arm64-v8a"],
     "ios": ["ios"]
@@ -20,7 +20,7 @@ extensions = {
     "ios": ".ipa"
 }
 
-# Correct folder names with proper case
+# Correct folder names with proper casing
 folder_names = {
     "windows": "Windows",
     "macos": "macOS",
@@ -37,7 +37,8 @@ def fetch_html(url):
 def extract_file_and_date(html, ext, system="", variant="", url=""):
     rows = re.findall(
         r'<tr><td><a href="([^"]+%s)".*?</a></td><td[^>]*>\s*\d+\s*</td><td[^>]*>([^<]+)</td>' % re.escape(ext),
-        html
+        html,
+        flags=re.IGNORECASE
     )
     if not rows:
         print(f"❌ No match for {system}/{variant} at {url}")
@@ -46,11 +47,12 @@ def extract_file_and_date(html, ext, system="", variant="", url=""):
     print(f"✅ Found file for {system}/{variant} → {filename}")
     return filename, date_str
 
+# Handle nightly channels (develop + beta)
 for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
     channel_obj = {}
 
-    # Get version from Windows x64 build
+    # Get version info from Windows x64 build
     win_url = f"{base_url}/Windows/"
     html = fetch_html(win_url)
     filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
@@ -99,7 +101,57 @@ for channel in channels:
 
     result[channel] = channel_obj
 
-# Write output JSON
+# Handle stable channel via GitHub API
+print("\n🔍 Fetching stable release from GitHub...")
+try:
+    with urllib.request.urlopen("https://api.github.com/repos/vcmi/vcmi/releases/latest") as response:
+        release = json.load(response)
+
+    stable_obj = {
+        "version": release["tag_name"],
+        "buildDate": release["published_at"],
+        "changeLog": release.get("body", "Latest stable release.")
+    }
+
+    # Define expected stable asset patterns
+    stable_mapping = {
+        "windows": {
+            "x64": "VCMI-Windows.exe",
+            "x86": "VCMI-Windows32bit.exe"
+        },
+        "macos": {
+            "arm": "VCMI-macOS-arm.dmg",
+            "intel": "VCMI-macOS-intel.dmg"
+        },
+        "android": {
+            "armeabi-v7a": "VCMI-Android-armeabi-v7a.apk",
+            "arm64-v8a": "VCMI-Android-arm64-v8a.apk"
+        },
+        "ios": {
+            "ios": "VCMI-iOS.ipa"
+        }
+    }
+
+    for system, variants in stable_mapping.items():
+        system_obj = {}
+        for variant, filename in variants.items():
+            asset = next((a for a in release.get("assets", []) if a["name"] == filename), None)
+            if asset:
+                print(f"✅ Found stable {system}/{variant}: {filename}")
+                system_obj[variant] = {
+                    "download": asset["browser_download_url"]
+                }
+            else:
+                print(f"❌ Missing stable {system}/{variant}: {filename}")
+        if system_obj:
+            stable_obj[system] = system_obj
+
+    result["stable"] = stable_obj
+
+except Exception as e:
+    print(f"⚠️ Failed to fetch stable release: {e}")
+
+# Write final JSON
 os.makedirs("updates", exist_ok=True)
 output_path = "updates/vcmi-update.json"
 with open(output_path, "w", encoding="utf-8") as f:
