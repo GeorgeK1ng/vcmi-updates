@@ -79,9 +79,27 @@ for channel in channels:
     win_url = f"{base_url}/Windows/"
     html = fetch_html(win_url)
     filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
+    
     if not filename:
-        print(f"⚠️ No Windows x64 build found for {channel}")
-        continue
+        print(f"⚠️ No Windows x64 build found for {channel} — proceeding with limited data")
+        channel_obj["version"] = "1.7-dev"
+        channel_obj["commit"] = "unknown"
+        channel_obj["buildDate"] = datetime.utcnow().isoformat()
+        channel_obj["changeLog"] = "Partial build info. Windows x64 missing."
+    else:
+        build_hash_match = re.search(r'VCMI-branch-[a-z]+-([a-f0-9]+)\.exe', filename)
+        if not build_hash_match:
+            raise RuntimeError("Build hash not found in filename")
+    
+        build_hash = build_hash_match.group(1)
+        build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").isoformat()
+    
+        exe_url = f"{win_url}{filename}"
+        version_string = get_file_version_from_exe_url(exe_url)
+        channel_obj["version"] = version_string
+        channel_obj["commit"] = build_hash
+        channel_obj["buildDate"] = build_date
+        channel_obj["changeLog"] = "Latest nightly build from develop branch."
 
     build_hash_match = re.search(r'VCMI-branch-[a-z]+-([a-f0-9]+)\.exe', filename)
     if not build_hash_match:
