@@ -26,14 +26,17 @@ def fetch_html(url):
     with urllib.request.urlopen(url) as response:
         return response.read().decode("utf-8")
 
-def extract_file_and_date(html, ext):
-    match = re.search(
-        rf'<tr><td><a href="([^"]+{re.escape(ext)})".*?</a></td><td>.*?</td><td>([0-9]{{4}}-[A-Za-z]{{3}}-[0-9]{{2}} [0-9]{{2}}:[0-9]{{2}})</td></tr>',
+def extract_file_and_date(html, ext, system="", variant="", url=""):
+    rows = re.findall(
+        r'<tr><td><a href="([^"]+%s)".*?</a></td><td[^>]*>\s*\d+\s*</td><td[^>]*>([^<]+)</td>' % re.escape(ext),
         html
     )
-    if not match:
+    if not rows:
+        print(f"❌ No match for {system}/{variant} at {url}")
         return None, None
-    return match.group(1), match.group(2)
+    filename, date_str = rows[0]
+    print(f"✅ Found file for {system}/{variant} → {filename}")
+    return filename, date_str
 
 for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
@@ -42,7 +45,7 @@ for channel in channels:
     # First: get version from Windows x64 build
     win_url = f"{base_url}/Windows/"
     html = fetch_html(win_url)
-    filename, date_str = extract_file_and_date(html, ".exe")
+    filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
     if not filename:
         raise RuntimeError(f"No Windows x64 build found for {channel}")
 
@@ -70,10 +73,11 @@ for channel in channels:
 
             try:
                 html = fetch_html(url)
-            except:
+            except Exception as e:
+                print(f"⚠️ Failed to fetch {url}: {e}")
                 continue
 
-            filename, _ = extract_file_and_date(html, extensions[system])
+            filename, _ = extract_file_and_date(html, extensions[system], system, variant, url)
             if not filename:
                 continue
 
@@ -89,7 +93,8 @@ for channel in channels:
 
 # Write output JSON
 os.makedirs("updates", exist_ok=True)
-with open("updates/vcmi-update.json", "w", encoding="utf-8") as f:
+output_path = "updates/vcmi-update.json"
+with open(output_path, "w", encoding="utf-8") as f:
     json.dump(result, f, indent=2)
 
-print("✅ Generated updates/vcmi-update.json")
+print(f"\n✅ Generated {output_path}")
