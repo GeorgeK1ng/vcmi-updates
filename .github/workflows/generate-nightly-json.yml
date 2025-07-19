@@ -1,0 +1,33 @@
+name: Generate latest-nightly.json
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  generate_json:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout develop branch
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Set up Python
+        run: sudo apt-get update && sudo apt-get install -y python3 python3-pip
+
+      - name: Run JSON generator
+        run: python3 .github/scripts/generate_latest_nightly.py
+
+      - name: Commit and push
+        uses: EndBug/add-and-commit@v9
+        with:
+          default_author: github_actions
+          message: "Update latest-nightly.json"
+          add: "updates/latest-nightly.json"
+          push: true
