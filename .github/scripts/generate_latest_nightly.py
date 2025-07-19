@@ -3,6 +3,8 @@ import re
 from datetime import datetime
 import json
 import os
+import tempfile
+import pefile
 
 # Define channels and systems
 channels = ["develop", "beta"]
@@ -47,6 +49,26 @@ def extract_file_and_date(html, ext, system="", variant="", url=""):
     print(f"✅ Found file for {system}/{variant} → {filename}")
     return filename, date_str
 
+def get_file_version_from_exe_url(url):
+    try:
+        # Download the EXE to a temp file
+        with urllib.request.urlopen(url) as response:
+            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+                tmp_file.write(response.read())
+                tmp_path = tmp_file.name
+
+        pe = pefile.PE(tmp_path)
+        for fileinfo in pe.FileInfo:
+            for entry in fileinfo:
+                if hasattr(entry, 'StringTable'):
+                    for st in entry.StringTable:
+                        version = st.entries.get(b"FileVersion") or st.entries.get("FileVersion")
+                        if version:
+                            return version.decode("utf-8") if isinstance(version, bytes) else version
+    except Exception as e:
+        print(f"⚠️ Could not extract version from EXE: {e}")
+    return "1.6.8" # Fallback as older installers doesn't contain FileVersion in PE Header
+
 # Handle nightly channels (develop + beta)
 for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
@@ -66,7 +88,9 @@ for channel in channels:
     build_hash = build_hash_match.group(1)
     build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").isoformat()
 
-    channel_obj["version"] = f"VCMI 1.7-dev-{build_hash}"
+    exe_url = f"{win_url}{filename}"
+    version_string = get_file_version_from_exe_url(exe_url)
+    channel_obj["version"] = version_string
     channel_obj["commit"] = build_hash
     channel_obj["buildDate"] = build_date
     channel_obj["changeLog"] = "Latest nightly build from develop branch."
