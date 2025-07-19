@@ -31,8 +31,6 @@ folder_names = {
     "ios": "iOS"
 }
 
-result = {}
-
 def fetch_html(url):
     with urllib.request.urlopen(url) as response:
         return response.read().decode("utf-8")
@@ -72,6 +70,7 @@ def get_file_version_from_exe_url(url):
     return "1.6.8" # Fallback as older installers doesn't contain FileVersion in PE Header
 
 # Handle nightly channels (develop + beta)
+channel_results = {}
 for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
     channel_obj = {}
@@ -126,7 +125,14 @@ for channel in channels:
             key = f"{system}-{variant}"
             channel_obj.setdefault("download", {})[key] = download_url
 
-    result[channel] = channel_obj
+    channel_results[channel] = channel_obj
+
+# Write separate JSONs for each nightly channel
+for channel, data in channel_results.items():
+    filename = f"vcmi-{channel}.json"
+    with open(filename, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    print(f"📄 Written {filename}")
 
 # Handle stable channel via GitHub API
 print("\n🔍 Fetching stable release from GitHub...")
@@ -175,14 +181,9 @@ try:
                 key = f"{system}-{variant}"
                 stable_obj.setdefault("download", {})[key] = data["download"]
 
-    result["stable"] = stable_obj
+    with open("vcmi-stable.json", "w", encoding="utf-8") as f:
+        json.dump(stable_obj, f, indent=2)
+    print("📄 Written vcmi-stable.json")
 
 except Exception as e:
     print(f"⚠️ Failed to fetch stable release: {e}")
-
-# Write final JSON
-output_path = "vcmi-update.json"
-with open(output_path, "w", encoding="utf-8") as f:
-    json.dump(result, f, indent=2)
-
-print(f"\n✅ Generated {output_path}")
