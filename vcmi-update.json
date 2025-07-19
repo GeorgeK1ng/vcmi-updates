@@ -1,0 +1,106 @@
+{
+  "develop": {
+    "version": "1.6.8",
+    "commit": "7fcb024",
+    "buildDate": "2025-07-18T20:49:00",
+    "changeLog": "Latest nightly build from develop branch.",
+    "windows": {
+      "x64": {
+        "download": "https://builds.vcmi.download/branch/develop/Windows/VCMI-branch-develop-7fcb024.exe"
+      },
+      "x86": {
+        "download": "https://builds.vcmi.download/branch/develop/Windows/VCMI-branch-develop-7fcb024.exe"
+      }
+    },
+    "macos": {
+      "intel": {
+        "download": "https://builds.vcmi.download/branch/develop/macOS/intel/VCMI-branch-develop-7fcb024.dmg"
+      },
+      "arm": {
+        "download": "https://builds.vcmi.download/branch/develop/macOS/arm/VCMI-branch-develop-7fcb024.dmg"
+      }
+    },
+    "android": {
+      "armeabi-v7a": {
+        "download": "https://builds.vcmi.download/branch/develop/Android/armeabi-v7a/VCMI-branch-develop-7fcb024.apk"
+      },
+      "arm64-v8a": {
+        "download": "https://builds.vcmi.download/branch/develop/Android/arm64-v8a/VCMI-branch-develop-7fcb024.apk"
+      }
+    },
+    "ios": {
+      "ios": {
+        "download": "https://builds.vcmi.download/branch/develop/iOS/VCMI-branch-develop-7fcb024.ipa"
+      }
+    }
+  },
+  "beta": {
+    "version": "1.6.8",
+    "commit": "a00ec58",
+    "buildDate": "2025-04-24T18:30:00",
+    "changeLog": "Latest nightly build from develop branch.",
+    "windows": {
+      "x64": {
+        "download": "https://builds.vcmi.download/branch/beta/Windows/VCMI-branch-beta-a00ec58.exe"
+      },
+      "x86": {
+        "download": "https://builds.vcmi.download/branch/beta/Windows/VCMI-branch-beta-a00ec58.exe"
+      }
+    },
+    "macos": {
+      "intel": {
+        "download": "https://builds.vcmi.download/branch/beta/macOS/intel/VCMI-branch-beta-a00ec58.dmg"
+      },
+      "arm": {
+        "download": "https://builds.vcmi.download/branch/beta/macOS/arm/VCMI-branch-beta-a00ec58.dmg"
+      }
+    },
+    "android": {
+      "armeabi-v7a": {
+        "download": "https://builds.vcmi.download/branch/beta/Android/armeabi-v7a/VCMI-branch-beta-a00ec58.apk"
+      },
+      "arm64-v8a": {
+        "download": "https://builds.vcmi.download/branch/beta/Android/arm64-v8a/VCMI-branch-beta-a00ec58.apk"
+      }
+    },
+    "ios": {
+      "ios": {
+        "download": "https://builds.vcmi.download/branch/beta/iOS/VCMI-branch-beta-a00ec58.ipa"
+      }
+    }
+  },
+  "stable": {
+    "version": "1.6.8",
+    "buildDate": "2025-04-25T16:12:54Z",
+    "changeLog": "Note: saved games from 1.5 release can be loaded in 1.6\r\n\r\n### Changelog\r\n- Player Changelog: [1.6.7 -> 1.6.8](https://github.com/vcmi/vcmi/blob/master/ChangeLog.md#167---168)\r\n- Full Changelog: https://github.com/vcmi/vcmi/compare/1.6.7..1.6.8\r\n\r\n### Additional builds\r\n<!-- - Android release will be available on Google Play shortly -->\r\n<!-- - Linux release will be available on Flathub shortly -->\r\n<!-- - Ubuntu release will be available on VCMI PPA shortly -->\r\n<!-- - Android release is available on [Google Play](https://play.google.com/store/apps/details?id=is.xyz.vcmi) -->\r\n<!-- - Linux release is available on [Flathub](https://flathub.org/apps/eu.vcmi.VCMI) -->\r\n<!-- - Ubuntu release is available on [VCMI PPA](https://launchpad.net/~vcmi/+archive/ubuntu/ppa) -->\r\n\r\n- Android release is available on [Google Play](https://play.google.com/store/apps/details?id=is.xyz.vcmi)\r\n- Linux release is available on [Flathub](https://flathub.org/apps/eu.vcmi.VCMI)\r\n- Ubuntu release is available on [VCMI PPA](https://launchpad.net/~vcmi/+archive/ubuntu/ppa)\r\n- macOS release can be installed via Homebrew: `brew install --cask --no-quarantine vcmi/vcmi/vcmi`",
+    "windows": {
+      "x64": {
+        "download": "https://github.com/vcmi/vcmi/releases/download/1.6.8/VCMI-Windows.exe"
+      },
+      "x86": {
+        "download": "https://github.com/vcmi/vcmi/releases/download/1.6.8/VCMI-Windows32bit.exe"
+      }
+    },
+    "macos": {
+      "arm": {
+        "download": "https://github.com/vcmi/vcmi/releases/download/1.6.8/VCMI-macOS-arm.dmg"
+      },
+      "intel": {
+        "download": "https://github.com/vcmi/vcmi/releases/download/1.6.8/VCMI-macOS-intel.dmg"
+      }
+    },
+    "android": {
+      "armeabi-v7a": {
+        "download": "https://github.com/vcmi/vcmi/releases/download/1.6.8/VCMI-Android-armeabi-v7a.apk"
+      },
+      "arm64-v8a": {
+        "download": "https://github.com/vcmi/vcmi/releases/download/1.6.8/VCMI-Android-arm64-v8a.apk"
+      }
+    },
+    "ios": {
+      "ios": {
+        "download": "https://github.com/vcmi/vcmi/releases/download/1.6.8/VCMI-iOS.ipa"
+      }
+    }
+  }
+}
