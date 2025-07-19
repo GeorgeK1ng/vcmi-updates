@@ -20,6 +20,14 @@ extensions = {
     "ios": ".ipa"
 }
 
+# Correct folder names with proper case
+folder_names = {
+    "windows": "Windows",
+    "macos": "macOS",
+    "android": "Android",
+    "ios": "iOS"
+}
+
 result = {}
 
 def fetch_html(url):
@@ -42,7 +50,7 @@ for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
     channel_obj = {}
 
-    # First: get version from Windows x64 build
+    # Get version from Windows x64 build
     win_url = f"{base_url}/Windows/"
     html = fetch_html(win_url)
     filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
@@ -62,14 +70,14 @@ for channel in channels:
     channel_obj["changeLog"] = "Latest nightly build from develop branch."
 
     for system, variants in platforms.items():
+        folder = folder_names[system]
         system_obj = {}
+
         for variant in variants:
-            if system == "windows":
-                url = f"{base_url}/Windows/"
-            elif system == "ios":
-                url = f"{base_url}/iOS/"
+            if system in ["windows", "ios"]:
+                url = f"{base_url}/{folder}/"
             else:
-                url = f"{base_url}/{system}/{variant}/"
+                url = f"{base_url}/{folder}/{variant}/"
 
             try:
                 html = fetch_html(url)
