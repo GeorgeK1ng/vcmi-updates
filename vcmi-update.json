@@ -14,6 +14,12 @@
       "ios-ios": "https://builds.vcmi.download/branch/develop/iOS/VCMI-branch-develop-7fcb024.ipa"
     }
   },
+  "beta": {
+    "version": "1.7-dev",
+    "commit": "unknown",
+    "buildDate": "2025-07-19T17:11:53.569153+00:00",
+    "changeLog": "Partial build info. Windows x64 missing."
+  },
   "stable": {
     "version": "1.6.8",
     "buildDate": "2025-04-25T16:12:54Z",
