@@ -120,8 +120,9 @@ for channel in channels:
                 "download": download_url
             }
 
-        if system_obj:
-            channel_obj[system] = system_obj
+        for variant, data in system_obj.items():
+            key = f"{system}-{variant}"
+            channel_obj.setdefault("download", {})[key] = data["download"]
 
     result[channel] = channel_obj
 
