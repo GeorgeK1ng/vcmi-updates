@@ -11,29 +11,48 @@ print("Fetching builds index...")
 response = urllib.request.urlopen(URL)
 html = response.read().decode('utf-8')
 
-# Match filenames
-matches = re.findall(r'VCMI-branch-beta-([a-f0-9]+)\.exe', html)
-if not matches:
-    raise RuntimeError("No builds found!")
+# Parse lines from <pre> section
+lines = html.splitlines()
+builds = []
 
-build_hash = matches[-1]
-build_filename = f"VCMI-branch-beta-{build_hash}.exe"
-download_url = f"{URL}{build_filename}"
+for line in lines:
+    # Match line like: <a href="VCMI-branch-beta-a00ec58.exe">VCMI-branch-beta-a00ec58.exe</a>       19-Jul-2025 03:42
+    match = re.search(r'href="(VCMI-branch-beta-[a-f0-9]+\.exe)".*?([0-9]{2}-[A-Za-z]{3}-[0-9]{4}) ([0-9]{2}:[0-9]{2})', line)
+    if match:
+        filename = match.group(1)
+        date_str = match.group(2) + " " + match.group(3)
+        try:
+            dt = datetime.strptime(date_str, "%d-%b-%Y %H:%M")
+            builds.append((dt, filename))
+        except Exception as e:
+            print(f"Skipping line: {line.strip()} due to error: {e}")
 
-# Match date for the latest build
-line_match = re.search(rf'{re.escape(build_filename)}</a></td><td align="right">([0-9]{{4}}-[A-Za-z]{{3}}-[0-9]{{2}} [0-9]{{2}}:[0-9]{{2}})', html)
-if not line_match:
-    raise RuntimeError("Upload date not found!")
+if not builds:
+    raise RuntimeError("No valid builds found!")
 
-upload_date_str = line_match.group(1)
-build_date = datetime.strptime(upload_date_str, "%Y-%b-%d %H:%M").isoformat()
+# Sort and get the latest build
+builds.sort()
+latest_dt, latest_filename = builds[-1]
+build_hash_match = re.match(r'VCMI-branch-beta-([a-f0-9]+)\.exe', latest_filename)
+if not build_hash_match:
+    raise RuntimeError("Could not extract hash from filename.")
 
-# Output object
+build_hash = build_hash_match.group(1)
+download_url = f"{URL}{latest_filename}"
+
+# Debug output
+print("Found builds:")
+for dt, fn in builds:
+    print(f" - {fn} @ {dt.isoformat()}")
+
+print(f"\nLatest: {latest_filename} ({build_hash}) @ {latest_dt.isoformat()}")
+
+# Output JSON
 data = {
     "updateType": "nightly",
     "version": f"VCMI 1.7-dev-{build_hash}",
     "commit": build_hash,
-    "buildDate": build_date,
+    "buildDate": latest_dt.isoformat(),
     "changeLog": "Latest nightly build from develop branch.",
     "downloadLinks": {
         "windows": download_url
@@ -41,8 +60,9 @@ data = {
     "history": []
 }
 
-# Write JSON
+# Write to file
 os.makedirs("updates", exist_ok=True)
 with open(FILENAME, "w", encoding="utf-8") as f:
     json.dump(data, f, indent=2)
-print(f"Generated {FILENAME}")
+
+print(f"\n✅ Generated {FILENAME}")
