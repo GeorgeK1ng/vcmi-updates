@@ -5,6 +5,7 @@ import json
 import os
 import tempfile
 import pefile
+from datetime import timezone
 
 # Define channels and systems
 channels = ["develop", "beta"]
@@ -84,7 +85,7 @@ for channel in channels:
         print(f"⚠️ No Windows x64 build found for {channel} — proceeding with limited data")
         channel_obj["version"] = "1.7-dev"
         channel_obj["commit"] = "unknown"
-        channel_obj["buildDate"] = datetime.utcnow().isoformat()
+        channel_obj["buildDate"] = datetime.now(timezone.utc).isoformat()
         channel_obj["changeLog"] = "Partial build info. Windows x64 missing."
     else:
         build_hash_match = re.search(r'VCMI-branch-[a-z]+-([a-f0-9]+)\.exe', filename)
