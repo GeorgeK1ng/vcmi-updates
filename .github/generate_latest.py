@@ -64,7 +64,8 @@ def get_file_version_from_exe_url(url):
                     for st in entry.StringTable:
                         version = st.entries.get(b"FileVersion") or st.entries.get("FileVersion")
                         if version:
-                            return version.decode("utf-8") if isinstance(version, bytes) else version
+                            version = version.decode("utf-8") if isinstance(version, bytes) else version
+                            return version.replace(" ", "").strip()
     except Exception as e:
         print(f"⚠️ Could not extract version from EXE: {e}")
     return "1.6.8" # Fallback as older installers doesn't contain FileVersion in PE Header
@@ -79,7 +80,8 @@ for channel in channels:
     html = fetch_html(win_url)
     filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
     if not filename:
-        raise RuntimeError(f"No Windows x64 build found for {channel}")
+        print(f"⚠️ No Windows x64 build found for {channel}")
+        continue
 
     build_hash_match = re.search(r'VCMI-branch-[a-z]+-([a-f0-9]+)\.exe', filename)
     if not build_hash_match:
@@ -116,13 +118,8 @@ for channel in channels:
                 continue
 
             download_url = url + filename
-            system_obj[variant] = {
-                "download": download_url
-            }
-
-        for variant, data in system_obj.items():
             key = f"{system}-{variant}"
-            channel_obj.setdefault("download", {})[key] = data["download"]
+            channel_obj.setdefault("download", {})[key] = download_url
 
     result[channel] = channel_obj
 
@@ -169,7 +166,9 @@ try:
             else:
                 print(f"❌ Missing stable {system}/{variant}: {filename}")
         if system_obj:
-            stable_obj[system] = system_obj
+            for variant, data in system_obj.items():
+                key = f"{system}-{variant}"
+                stable_obj.setdefault("download", {})[key] = data["download"]
 
     result["stable"] = stable_obj
 
