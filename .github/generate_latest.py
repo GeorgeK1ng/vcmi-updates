@@ -176,8 +176,7 @@ except Exception as e:
     print(f"⚠️ Failed to fetch stable release: {e}")
 
 # Write final JSON
-os.makedirs("updates", exist_ok=True)
-output_path = "updates/vcmi-update.json"
+output_path = "vcmi-update.json"
 with open(output_path, "w", encoding="utf-8") as f:
     json.dump(result, f, indent=2)
 
