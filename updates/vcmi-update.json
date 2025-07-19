@@ -9,6 +9,22 @@
         "download": "https://builds.vcmi.download/branch/develop/Windows/VCMI-branch-develop-7fcb024.exe"
       }
     },
+    "macos": {
+      "intel": {
+        "download": "https://builds.vcmi.download/branch/develop/macOS/intel/VCMI-branch-develop-7fcb024.dmg"
+      },
+      "arm": {
+        "download": "https://builds.vcmi.download/branch/develop/macOS/arm/VCMI-branch-develop-7fcb024.dmg"
+      }
+    },
+    "android": {
+      "armeabi-v7a": {
+        "download": "https://builds.vcmi.download/branch/develop/Android/armeabi-v7a/VCMI-branch-develop-7fcb024.apk"
+      },
+      "arm64-v8a": {
+        "download": "https://builds.vcmi.download/branch/develop/Android/arm64-v8a/VCMI-branch-develop-7fcb024.apk"
+      }
+    },
     "ios": {
       "ios": {
         "download": "https://builds.vcmi.download/branch/develop/iOS/VCMI-branch-develop-7fcb024.ipa"
@@ -23,6 +39,22 @@
     "windows": {
       "x64": {
         "download": "https://builds.vcmi.download/branch/beta/Windows/VCMI-branch-beta-a00ec58.exe"
+      }
+    },
+    "macos": {
+      "intel": {
+        "download": "https://builds.vcmi.download/branch/beta/macOS/intel/VCMI-branch-beta-a00ec58.dmg"
+      },
+      "arm": {
+        "download": "https://builds.vcmi.download/branch/beta/macOS/arm/VCMI-branch-beta-a00ec58.dmg"
+      }
+    },
+    "android": {
+      "armeabi-v7a": {
+        "download": "https://builds.vcmi.download/branch/beta/Android/armeabi-v7a/VCMI-branch-beta-a00ec58.apk"
+      },
+      "arm64-v8a": {
+        "download": "https://builds.vcmi.download/branch/beta/Android/arm64-v8a/VCMI-branch-beta-a00ec58.apk"
       }
     },
     "ios": {
