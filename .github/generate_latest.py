@@ -32,8 +32,8 @@ def fetch_html(url):
 
 def extract_file_and_date(html, ext, system="", variant="", url=""):
     """
-    Extract the latest file matching the given extension from directory listing HTML,
-    based on the most recent date column.
+    Extract the most recent file based on the date column.
+    Returns (filename, date_str)
     """
     rows = re.findall(
         r'<tr><td><a href="([^"]+%s)".*?</a></td><td[^>]*>\s*\d+\s*</td><td[^>]*>([^<]+)</td>' % re.escape(ext),
@@ -50,16 +50,14 @@ def extract_file_and_date(html, ext, system="", variant="", url=""):
         except ValueError:
             return datetime.min
 
-    # Sort by newest date
+    # Sort by newest
     rows.sort(key=lambda x: parse_date(x[1]), reverse=True)
     filename, date_str = rows[0]
     print(f"✅ Found newest file for {system}/{variant} → {filename}")
     return filename, date_str
 
 def get_file_version_from_exe_url(url):
-    """
-    Download the given .exe file and extract FileVersion from the PE metadata.
-    """
+    """Extract FileVersion from EXE PE header."""
     try:
         with urllib.request.urlopen(url) as response:
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -77,26 +75,31 @@ def get_file_version_from_exe_url(url):
                             return version.replace(" ", "").strip()
     except Exception as e:
         print(f"⚠️ Could not extract version from EXE: {e}")
-    return "1.6.8"  # Fallback for legacy builds
+    return "1.6.8"
 
-# Process nightly channels: develop and beta
+# Prepare empty download map template
+empty_download_map = {f"{system}-{variant}": "" for _, (system, variant) in platform_dirs.items()}
+
+# Process nightly branches: develop and beta
 channels = ["develop", "beta"]
 channel_results = {}
 
 for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
-    channel_obj = {}
+    channel_obj = {
+        "download": dict(empty_download_map)
+    }
 
-    # Extract version info from latest Windows x64 build
+    # Get latest Windows x64 build info
     win_url = f"{base_url}/windows-x64/"
     html = fetch_html(win_url)
     filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
 
     if not filename:
-        print(f"⚠️ No Windows x64 build found for {channel} — proceeding with limited data")
+        print(f"⚠️ No Windows x64 build found for {channel} — using fallback metadata")
         channel_obj["version"] = "1.7-dev"
         channel_obj["commit"] = "unknown"
-        channel_obj["buildDate"] = datetime.now(timezone.utc).isoformat()
+        channel_obj["buildDate"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         channel_obj["changeLog"] = "Partial build info. Windows x64 missing."
     else:
         build_hash_match = re.search(r'VCMI-branch-[\w\-]+-([a-fA-F0-9]+)\.exe', filename)
@@ -104,7 +107,7 @@ for channel in channels:
             raise RuntimeError("Build hash not found in filename")
 
         build_hash = build_hash_match.group(1)
-        build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").isoformat()
+        build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
 
         exe_url = f"{win_url}{filename}"
         version_string = get_file_version_from_exe_url(exe_url)
@@ -113,7 +116,7 @@ for channel in channels:
         channel_obj["buildDate"] = build_date
         channel_obj["changeLog"] = "Latest nightly build from develop branch."
 
-    # Add download links for all platforms
+    # Detect builds for all platforms
     for folder_name, (system, variant) in platform_dirs.items():
         url = f"{base_url}/{folder_name}/"
         try:
@@ -128,18 +131,18 @@ for channel in channels:
 
         download_url = url + filename
         key = f"{system}-{variant}"
-        channel_obj.setdefault("download", {})[key] = download_url
+        channel_obj["download"][key] = download_url
 
     channel_results[channel] = channel_obj
 
-# Write develop.json and beta.json
+# Write develop and beta JSON files
 for channel, data in channel_results.items():
     filename = f"vcmi-{channel}.json"
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     print(f"📄 Written {filename}")
 
-# Process stable channel from GitHub releases
+# Fetch latest stable release from GitHub
 print("\n🔍 Fetching stable release from GitHub...")
 try:
     with urllib.request.urlopen("https://api.github.com/repos/vcmi/vcmi/releases/latest") as response:
@@ -147,8 +150,9 @@ try:
 
     stable_obj = {
         "version": release["tag_name"],
-        "buildDate": release["published_at"],
-        "changeLog": release.get("body", "Latest stable release.")
+        "buildDate": release["published_at"].replace("+00:00", "Z") if release["published_at"].endswith("+00:00") else release["published_at"],
+        "changeLog": release.get("body", "Latest stable release."),
+        "download": dict(empty_download_map)
     }
 
     stable_mapping = {
@@ -172,12 +176,12 @@ try:
     for system, variants in stable_mapping.items():
         for variant, filename in variants.items():
             asset = next((a for a in release.get("assets", []) if a["name"] == filename), None)
+            key = f"{system}-{variant}"
             if asset:
-                print(f"✅ Found stable {system}/{variant}: {filename}")
-                key = f"{system}-{variant}"
-                stable_obj.setdefault("download", {})[key] = asset["browser_download_url"]
+                print(f"✅ Found stable {key}: {filename}")
+                stable_obj["download"][key] = asset["browser_download_url"]
             else:
-                print(f"❌ Missing stable {system}/{variant}: {filename}")
+                print(f"❌ Missing stable {key}: {filename}")
 
     with open("vcmi-stable.json", "w", encoding="utf-8") as f:
         json.dump(stable_obj, f, indent=2, ensure_ascii=False)
