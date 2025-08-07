@@ -4,8 +4,9 @@ from datetime import datetime, timezone
 import json
 import tempfile
 import pefile
+from collections import OrderedDict
 
-# Mapping of actual folder names to logical system/variant pairs
+# Folder name → (system, variant)
 platform_dirs = {
     "windows-x64": ("windows", "x64"),
     "windows-x86": ("windows", "x86"),
@@ -17,7 +18,7 @@ platform_dirs = {
     "ios": ("ios", "ios")
 }
 
-# File extensions per platform
+# File extensions
 extensions = {
     "windows": ".exe",
     "macos": ".dmg",
@@ -26,15 +27,12 @@ extensions = {
 }
 
 def fetch_html(url):
-    """Download and return the HTML content of a URL."""
+    """Download and return HTML content from directory listing."""
     with urllib.request.urlopen(url) as response:
         return response.read().decode("utf-8")
 
 def extract_file_and_date(html, ext, system="", variant="", url=""):
-    """
-    Extract the most recent file based on the date column.
-    Returns (filename, date_str)
-    """
+    """Extract the most recent file based on the date column."""
     rows = re.findall(
         r'<tr><td><a href="([^"]+%s)".*?</a></td><td[^>]*>\s*\d+\s*</td><td[^>]*>([^<]+)</td>' % re.escape(ext),
         html,
@@ -50,14 +48,13 @@ def extract_file_and_date(html, ext, system="", variant="", url=""):
         except ValueError:
             return datetime.min
 
-    # Sort by newest
     rows.sort(key=lambda x: parse_date(x[1]), reverse=True)
     filename, date_str = rows[0]
     print(f"✅ Found newest file for {system}/{variant} → {filename}")
     return filename, date_str
 
 def get_file_version_from_exe_url(url):
-    """Extract FileVersion from EXE PE header."""
+    """Extract FileVersion from PE header in EXE."""
     try:
         with urllib.request.urlopen(url) as response:
             with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
@@ -77,30 +74,32 @@ def get_file_version_from_exe_url(url):
         print(f"⚠️ Could not extract version from EXE: {e}")
     return "1.6.8"
 
-# Prepare empty download map template
-empty_download_map = {f"{system}-{variant}": "" for _, (system, variant) in platform_dirs.items()}
+# Create default download key map
+empty_download_map = OrderedDict(
+    (f"{system}-{variant}", "") for _, (system, variant) in platform_dirs.items()
+)
 
-# Process nightly branches: develop and beta
+# Process nightly branches
 channels = ["develop", "beta"]
 channel_results = {}
 
 for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
-    channel_obj = {
-        "download": dict(empty_download_map)
-    }
+    channel_obj = None
 
-    # Get latest Windows x64 build info
+    # Get Windows x64 info
     win_url = f"{base_url}/windows-x64/"
     html = fetch_html(win_url)
     filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
 
     if not filename:
-        print(f"⚠️ No Windows x64 build found for {channel} — using fallback metadata")
+        print(f"⚠️ No Windows x64 build found for {channel}")
+        channel_obj = OrderedDict()
         channel_obj["version"] = "1.7-dev"
         channel_obj["commit"] = "unknown"
         channel_obj["buildDate"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
         channel_obj["changeLog"] = "Partial build info. Windows x64 missing."
+        channel_obj["download"] = OrderedDict(empty_download_map)
     else:
         build_hash_match = re.search(r'VCMI-branch-[\w\-]+-([a-fA-F0-9]+)\.exe', filename)
         if not build_hash_match:
@@ -108,15 +107,17 @@ for channel in channels:
 
         build_hash = build_hash_match.group(1)
         build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
-
         exe_url = f"{win_url}{filename}"
         version_string = get_file_version_from_exe_url(exe_url)
+
+        channel_obj = OrderedDict()
         channel_obj["version"] = version_string
         channel_obj["commit"] = build_hash
         channel_obj["buildDate"] = build_date
         channel_obj["changeLog"] = "Latest nightly build from develop branch."
+        channel_obj["download"] = OrderedDict(empty_download_map)
 
-    # Detect builds for all platforms
+    # Try to find files for all platforms
     for folder_name, (system, variant) in platform_dirs.items():
         url = f"{base_url}/{folder_name}/"
         try:
@@ -135,25 +136,24 @@ for channel in channels:
 
     channel_results[channel] = channel_obj
 
-# Write develop and beta JSON files
+# Write develop and beta JSON
 for channel, data in channel_results.items():
     filename = f"vcmi-{channel}.json"
     with open(filename, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2, ensure_ascii=False)
     print(f"📄 Written {filename}")
 
-# Fetch latest stable release from GitHub
+# Stable channel from GitHub releases
 print("\n🔍 Fetching stable release from GitHub...")
 try:
     with urllib.request.urlopen("https://api.github.com/repos/vcmi/vcmi/releases/latest") as response:
         release = json.load(response)
 
-    stable_obj = {
-        "version": release["tag_name"],
-        "buildDate": release["published_at"].replace("+00:00", "Z") if release["published_at"].endswith("+00:00") else release["published_at"],
-        "changeLog": release.get("body", "Latest stable release."),
-        "download": dict(empty_download_map)
-    }
+    stable_obj = OrderedDict()
+    stable_obj["version"] = release["tag_name"]
+    stable_obj["buildDate"] = release["published_at"].replace("+00:00", "Z") if release["published_at"].endswith("+00:00") else release["published_at"]
+    stable_obj["changeLog"] = release.get("body", "Latest stable release.")
+    stable_obj["download"] = OrderedDict(empty_download_map)
 
     stable_mapping = {
         "windows": {
@@ -175,8 +175,8 @@ try:
 
     for system, variants in stable_mapping.items():
         for variant, filename in variants.items():
-            asset = next((a for a in release.get("assets", []) if a["name"] == filename), None)
             key = f"{system}-{variant}"
+            asset = next((a for a in release.get("assets", []) if a["name"] == filename), None)
             if asset:
                 print(f"✅ Found stable {key}: {filename}")
                 stable_obj["download"][key] = asset["browser_download_url"]
