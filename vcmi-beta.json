@@ -1,4 +1,8 @@
 {
+  "version": "1.7-dev",
+  "commit": "unknown",
+  "buildDate": "2025-08-07T13:09:25.148223Z",
+  "changeLog": "Partial build info. Windows x64 missing.",
   "download": {
     "windows-x64": "",
     "windows-x86": "",
@@ -8,9 +12,5 @@
     "android-armeabi-v7a": "",
     "android-arm64-v8a": "",
     "ios-ios": ""
-  },
-  "version": "1.7-dev",
-  "commit": "unknown",
-  "buildDate": "2025-08-07T12:58:42.323204Z",
-  "changeLog": "Partial build info. Windows x64 missing."
+  }
 }

@@ -1,4 +1,8 @@
 {
+  "version": "1.7.0",
+  "commit": "79893cc",
+  "buildDate": "2025-08-06T16:39:00Z",
+  "changeLog": "Latest nightly build from develop branch.",
   "download": {
     "windows-x64": "https://builds.vcmi.download/branch/develop/windows-x64/VCMI-branch-develop-79893cc.exe",
     "windows-x86": "https://builds.vcmi.download/branch/develop/windows-x86/VCMI-branch-develop-79893cc.exe",
@@ -8,9 +12,5 @@
     "android-armeabi-v7a": "https://builds.vcmi.download/branch/develop/android-armeabi-v7a/VCMI-branch-develop-79893cc.apk",
     "android-arm64-v8a": "https://builds.vcmi.download/branch/develop/android-arm64-v8a/VCMI-branch-develop-79893cc.apk",
     "ios-ios": "https://builds.vcmi.download/branch/develop/ios/VCMI-branch-develop-79893cc.ipa"
-  },
-  "version": "1.7.0",
-  "commit": "79893cc",
-  "buildDate": "2025-08-06T16:39:00Z",
-  "changeLog": "Latest nightly build from develop branch."
+  }
 }
