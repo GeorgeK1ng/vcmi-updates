@@ -79,51 +79,70 @@ empty_download_map = OrderedDict(
     (f"{system}-{variant}", "") for _, (system, variant) in platform_dirs.items()
 )
 
+def make_empty_channel():
+    # Create default download key map with empty strings
+    empty_download_map = OrderedDict(
+        (f"{system}-{variant}", "") for _, (system, variant) in platform_dirs.items()
+    )
+    ch = OrderedDict()
+    ch["version"] = ""
+    ch["commit"] = ""
+    ch["buildDate"] = ""
+    ch["changeLog"] = ""
+    ch["download"] = empty_download_map
+    return ch
+
 # Process nightly branches
 channels = ["develop", "beta"]
 channel_results = {}
 
 for channel in channels:
     base_url = f"https://builds.vcmi.download/branch/{channel}"
-    channel_obj = None
+    channel_obj = make_empty_channel()
+    found_any = False  # track if we found at least one artifact
 
-    # Get Windows x64 info
+    # Try to set metadata from Windows x64 (anchor build)
     win_url = f"{base_url}/windows-x64/"
-    html = fetch_html(win_url)
+    try:
+        html = fetch_html(win_url)
+    except Exception as e:
+        html = ""
     filename, date_str = extract_file_and_date(html, ".exe", "windows", "x64", win_url)
 
-    if not filename:
-        print(f"⚠️ No Windows x64 build found for {channel}")
-        channel_obj = OrderedDict()
-        channel_obj["version"] = "1.7-dev"
-        channel_obj["commit"] = "unknown"
-        channel_obj["buildDate"] = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
-        channel_obj["changeLog"] = "Partial build info. Windows x64 missing."
-        channel_obj["download"] = OrderedDict(empty_download_map)
-    else:
+    if filename and date_str:
+        # we have our anchor → set metadata
         build_hash_match = re.search(r'VCMI-branch-[\w\-]+-([a-fA-F0-9]+)\.exe', filename)
-        if not build_hash_match:
-            raise RuntimeError("Build hash not found in filename")
+        if build_hash_match:
+            build_hash = build_hash_match.group(1)
+        else:
+            build_hash = ""
 
-        build_hash = build_hash_match.group(1)
-        build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+        build_date = ""
+        try:
+            build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").replace(
+                tzinfo=timezone.utc
+            ).isoformat().replace("+00:00", "Z")
+        except Exception:
+            pass
+
         exe_url = f"{win_url}{filename}"
-        version_string = get_file_version_from_exe_url(exe_url)
+        version_string = get_file_version_from_exe_url(exe_url) or ""
 
-        channel_obj = OrderedDict()
         channel_obj["version"] = version_string
         channel_obj["commit"] = build_hash
         channel_obj["buildDate"] = build_date
-        channel_obj["changeLog"] = "Latest nightly build from develop branch."
-        channel_obj["download"] = OrderedDict(empty_download_map)
+        channel_obj["changeLog"] = f"Latest nightly build from {channel} branch."
 
-    # Try to find files for all platforms
+        # Record that we found at least something
+        found_any = True
+        # also record the windows-x64 download below in the general loop
+
+    # Try to find files for all platforms (fills downloads, independent of metadata)
     for folder_name, (system, variant) in platform_dirs.items():
         url = f"{base_url}/{folder_name}/"
         try:
             html = fetch_html(url)
-        except Exception as e:
-            print(f"⚠️ Failed to fetch {url}: {e}")
+        except Exception:
             continue
 
         filename, _ = extract_file_and_date(html, extensions[system], system, variant, url)
@@ -133,7 +152,10 @@ for channel in channels:
         download_url = url + filename
         key = f"{system}-{variant}"
         channel_obj["download"][key] = download_url
+        found_any = True
 
+    # If nothing at all was found for this channel, keep everything empty
+    # (channel_obj already initialized as empty)
     channel_results[channel] = channel_obj
 
 # Write develop and beta JSON
