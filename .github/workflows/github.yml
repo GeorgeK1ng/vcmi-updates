@@ -2,7 +2,7 @@ name: Generate VCMI Update JSON
 
 on:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 0 * * *'   # every day at 00:00 UTC
   workflow_dispatch:
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
         run: pip3 install pefile
 
       - name: Generate JSON files
-        run: python3 .github/generate_latest.py
+        run: python3 .github/generate_update.py
 
       - name: Commit and push
         uses: EndBug/add-and-commit@v9
