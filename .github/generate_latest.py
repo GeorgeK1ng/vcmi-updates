@@ -81,16 +81,13 @@ empty_download_map = OrderedDict(
 )
 
 def make_empty_channel():
-    # Create default download key map with empty strings
-    empty_download_map = OrderedDict(
-        (f"{system}-{variant}", "") for _, (system, variant) in platform_dirs.items()
-    )
+    # Use the global empty_download_map prepared above
     ch = OrderedDict()
     ch["version"] = ""
     ch["commit"] = ""
     ch["buildDate"] = ""
     ch["changeLog"] = ""
-    ch["download"] = empty_download_map
+    ch["download"] = OrderedDict(empty_download_map)
     return ch
 
 # Process nightly branches
@@ -126,11 +123,14 @@ for channel in channels:
 
         exe_url = f"{win_url}{filename}"
         version_string = get_file_version_from_exe_url(exe_url) or ""
-
+        
         channel_obj["version"] = version_string
         channel_obj["commit"] = build_hash
         channel_obj["buildDate"] = build_date
         channel_obj["changeLog"] = f"Latest nightly build from {channel} branch."
+        
+        # Set the anchor platform download here to avoid re-fetching and duplicate logs
+        channel_obj["download"]["windows-x64"] = exe_url
 
         # Record that we found at least something
         found_any = True
@@ -138,20 +138,24 @@ for channel in channels:
 
     # Try to find files for all platforms (fills downloads, independent of metadata)
     for folder_name, (system, variant) in platform_dirs.items():
+        # We already processed windows-x64 as the anchor; skip to avoid duplicate log lines
+        if folder_name == "windows-x64":
+            continue
+    
         url = f"{base_url}/{folder_name}/"
         try:
             html = fetch_html(url)
         except Exception:
             continue
-
-        filename, _ = extract_file_and_date(html, extensions[system], system, variant, url)
-        if not filename:
+    
+        # Use a different name to avoid shadowing the outer 'filename'
+        fname, _ = extract_file_and_date(html, extensions[system], system, variant, url)
+        if not fname:
             continue
-
-        download_url = url + filename
+    
+        download_url = url + fname
         key = f"{system}-{variant}"
         channel_obj["download"][key] = download_url
-        found_any = True
 
     # If nothing at all was found for this channel, keep everything empty
     # (channel_obj already initialized as empty)
