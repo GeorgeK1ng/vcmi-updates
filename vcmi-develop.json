@@ -1,7 +1,7 @@
 {
   "version": "1.7.0",
   "commit": "72bc79a",
-  "buildDate": "2025-08-23T20:20:00Z",
+  "buildDate": "2025-08-23 20:20:00",
   "changeLog": "Latest nightly build from develop branch.",
   "download": {
     "windows-x64": "https://builds.vcmi.download/branch/develop/windows-x64/VCMI-branch-develop-72bc79a.exe",
