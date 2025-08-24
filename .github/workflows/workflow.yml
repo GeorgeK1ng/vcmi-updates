@@ -12,21 +12,19 @@ jobs:
       - name: Checkout develop branch
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.x'
-
       - name: Install dependencies
         run: pip3 install pefile
 
-      - name: Generate vcmi-update.json
-        run: python3 .github/scripts/generate_latest_nightly.py
+      - name: Generate JSON files
+        run: python3 .github/generate_latest.py
 
       - name: Commit and push
         uses: EndBug/add-and-commit@v9
         with:
           default_author: github_actions
-          message: "Auto-update vcmi-update.json"
-          add: "updates/vcmi-update.json"
+          message: "Auto-update VCMI update JSON files"
+          add: |
+            vcmi-develop.json
+            vcmi-beta.json
+            vcmi-stable.json
           push: true
