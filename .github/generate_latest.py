@@ -1,6 +1,7 @@
 import urllib.request
 import re
 from datetime import datetime, timezone
+from dateutil import parser
 import json
 import tempfile
 import pefile
@@ -119,9 +120,7 @@ for channel in channels:
 
         build_date = ""
         try:
-            build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").replace(
-                tzinfo=timezone.utc
-            ).isoformat().replace("+00:00", "Z")
+            build_date = datetime.strptime(date_str, "%Y-%b-%d %H:%M").strftime("%Y-%m-%d %H:%M:%S")
         except Exception:
             pass
 
@@ -173,7 +172,7 @@ try:
 
     stable_obj = OrderedDict()
     stable_obj["version"] = release["tag_name"]
-    stable_obj["buildDate"] = release["published_at"].replace("+00:00", "Z") if release["published_at"].endswith("+00:00") else release["published_at"]
+    stable_obj["buildDate"] = parser.isoparse(release["published_at"]).strftime("%Y-%m-%d %H:%M:%S")
     stable_obj["changeLog"] = release.get("body", "Latest stable release.")
     stable_obj["download"] = OrderedDict(empty_download_map)
 
