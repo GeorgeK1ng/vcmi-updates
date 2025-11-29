@@ -9,7 +9,7 @@
     "windows-arm64": "https://builds.vcmi.download/branch/develop/windows-arm64/VCMI-branch-develop-c5e4920.exe",
     "macos-intel": "https://builds.vcmi.download/branch/develop/macos-intel/VCMI-branch-develop-c5e4920.dmg",
     "macos-arm": "https://builds.vcmi.download/branch/develop/macos-arm/VCMI-branch-develop-c5e4920.dmg",
-    "android-armeabi-v7a": "",
+    "android-armeabi-v7a": "https://builds.vcmi.download/branch/develop/android-armeabi-v7a/VCMI-branch-develop-c5e4920.apk",
     "android-arm64-v8a": "https://builds.vcmi.download/branch/develop/android-arm64-v8a/VCMI-branch-develop-c5e4920.apk",
     "ios-ios": "https://builds.vcmi.download/branch/develop/ios/VCMI-branch-develop-c5e4920.ipa"
   }
